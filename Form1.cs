@@ -22,13 +22,13 @@ public partial class Form1 : Form
         try
         {
             conn?.Open();
-            string selectString = "SELECT * FROM Authors";
+            string selectString = "\r\nSELECT NAME\r\nFROM Categories";
             using SqlCommand cmd = new SqlCommand(selectString, conn);
             reader = cmd.ExecuteReader();
 
             while (reader.Read())
             {
-                Authors_cmbx.Items.Add(reader[1]);
+                Authors_cmbx.Items.Add(reader[0]);
             }
         }
         catch (Exception EX)
@@ -48,12 +48,18 @@ public partial class Form1 : Form
         try
         {
             conn?.Open();
-            string selectedString = @"SELECT * FROM Categories";
+            string selectedString = @"
+                                      Select Authors.FirstName
+                                      From Books
+                                      JOIN Authors ON Authors.Id=Id_Author
+                                      JOIN Categories ON Id_Category=Categories.Id
+                                      WHERE Categories.Name=@p1";
             using SqlCommand cmd = new SqlCommand(selectedString, conn);
+            cmd.Parameters.AddWithValue("@p1",Authors_cmbx.SelectedItem.ToString());
             reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                Category_cmbx.Items.Add(reader[1]);
+                Category_cmbx.Items.Add(reader[0]);
             }
         }
         catch (Exception ex)
@@ -70,7 +76,7 @@ public partial class Form1 : Form
 
     private void Refresh_Btn_Click(object sender, EventArgs e)
     {
-        Authors_cmbx.Items.Clear();
+        books_Listbox.Items.Clear();
         Add_Data();
     }
 
@@ -79,20 +85,19 @@ public partial class Form1 : Form
         try
         {
             conn?.Open();
-            string selectedString = @"SELECT * 
+            string selectedString = @"SELECT Books.Name
                                       FROM Books
-                                      JOIN Authors ON Authors.Id=Books.Id_Author
+                                      JOIN Authors ON Authors.Id=Id_Author
                                       JOIN Categories ON Categories.Id=Books.Id_Category
-                                      WHERE Authors.FirstName=@p1 AND Categories.[Name] = @p2";
+                                      WHERE Categories.Name=@p1";
 
             using SqlCommand cmd=new SqlCommand(selectedString,conn);
             cmd.Parameters.AddWithValue("@p1",Authors_cmbx.SelectedItem.ToString());
-            cmd.Parameters.AddWithValue("@p2", Category_cmbx.SelectedItem.ToString());
             reader= cmd.ExecuteReader();
 
             while(reader.Read())
             {
-                books_Listbox.Items.Add(reader[1]);
+                books_Listbox.Items.Add(reader[0]);
             }
 
         }
@@ -115,10 +120,11 @@ public partial class Form1 : Form
 
         try
         {
-            string selectedString = @"INSERT INTO Authors(Id,FirstName,LastName) VALUES(2,@p1,@p2)";
+            string selectedString = @"INSERT INTO Authors(Id,FirstName,LastName) VALUES(@id,@p1,@p2)";
             using SqlCommand cmd=new SqlCommand(selectedString,conn);
             cmd.Parameters.AddWithValue("@p1",Insert_Nametextbox.Text);
             cmd.Parameters.AddWithValue("@p2",Insert_LastNametextbox.Text);
+            cmd.Parameters.AddWithValue("@id", Insert_Idtextbox.Text);
             reader= cmd.ExecuteReader();
         }
         catch (Exception ex)
@@ -135,24 +141,52 @@ public partial class Form1 : Form
 
     private void Delete_Btn_Click(object sender, EventArgs e)
     {
-        conn?.Open();
+        
         try
         {
-            string selectedstring = @"DELETE FROM AUTHORS WHERE [FirstName] = @p1 AND [LastName] = @p2";
-            using SqlCommand cmd = new SqlCommand();
-            cmd.Parameters.AddWithValue("p1", Insert_Nametextbox.Text);
-            cmd.Parameters.AddWithValue("p2",Insert_LastNametextbox.Text);
+            conn?.Open();
+            string selectedstring = @"DELETE FROM AUTHORS WHERE [FirstName] = @p1 ";
+            using SqlCommand cmd = new SqlCommand(selectedstring,conn);
+            cmd.Parameters.AddWithValue("@p1", Insert_Nametextbox.Text);
             reader =cmd.ExecuteReader();
         }
         catch (Exception ex)
         {
-
+            Console.WriteLine(ex.Message);
             MessageBox.Show(ex.Message);
         }
         finally
         { 
             conn?.Close();
             reader?.Close();
+            
         }
     }
+
+    private void AllAuthorsBtn_Click(object sender, EventArgs e)
+    {
+        conn?.Open();
+        try
+        {
+            string selectedstring = "SELECT Authors.FirstName,Authors.LastName\r\nFROM Authors";
+            using SqlCommand cmd=new SqlCommand(selectedstring,conn);
+            reader=cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                books_Listbox.Items.Add(reader[0]);
+            }
+        }
+        catch (Exception ex)
+        {
+
+            MessageBox.Show(ex.Message);
+        }
+        finally 
+        { 
+            conn?.Close();
+            reader?.Close();
+        }
+        
+    }
+    //
 }
