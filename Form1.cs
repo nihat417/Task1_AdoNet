@@ -89,11 +89,12 @@ public partial class Form1 : Form
                                       FROM Books
                                       JOIN Authors ON Authors.Id=Id_Author
                                       JOIN Categories ON Categories.Id=Books.Id_Category
-                                      WHERE Categories.Name=@p1";
+                                      WHERE Authors.FirstName=@p1 AND Categories.[Name] = @p2";
 
             using SqlCommand cmd=new SqlCommand(selectedString,conn);
-            cmd.Parameters.AddWithValue("@p1",Authors_cmbx.SelectedItem.ToString());
-            reader= cmd.ExecuteReader();
+            cmd.Parameters.AddWithValue("@p2",Authors_cmbx.SelectedItem.ToString());
+            cmd.Parameters.AddWithValue("@p1", Category_cmbx.SelectedItem.ToString());
+            reader = cmd.ExecuteReader();
 
             while(reader.Read())
             {
